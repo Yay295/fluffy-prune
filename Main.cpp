@@ -4,7 +4,7 @@
 
 #include <GL/freeglut.h>
 #include <iostream>
-#include "quadtree.h"
+#include "quadtree.cpp"
 
 
 bool DRAW_LINES = false;
