@@ -45,6 +45,7 @@ class quadtree
 		bool contains( const size_t x, const size_t y );
 		void insert( const point * const P );
 		void insert( const size_t X, const size_t Y, const datatype & D );
+		void clear();
 
 		// Top Left, Top Right, Bottom Left, Bottom Right
 		point * tl = nullptr;
@@ -241,7 +242,7 @@ bool quadtree<datatype>::insert( const size_t X, const size_t Y, const datatype 
 			quad->data = D;
 		}
 
-		return true;
+		return true; 
 	}
 
 	else return false;
@@ -254,21 +255,82 @@ bool quadtree<datatype>::insert( const size_t X, const size_t Y, const datatype 
 Insert method for the quadtree class.
 ******************************************************************************/
 template <class datatype>
-void quadtree<datatype>::subdiv()
+void quadtree<datatype>::subdiv(const datatype ** const image, const datatype & eps)
 {
-	//TBD
+	int i, j = 0;
+	datatype curr, sum, min, max, avg =0;
+
+	for (i=0; i<height; ++i)
+	{
+		for (j=0; j<width; ++j)
+		{
+			curr = image[i][j];
+			sum += curr;
+			if(max<curr)
+				max = curr;
+			if(min>curr)
+				min = curr;
+			if(i==height-1 && j==width-1)
+				avg = sum/(height*width);
+		}
+	}
+
+	if (max-min < eps)
+	{
+		//insert();
+		return;
+	}
+	else
+	{
+		//insert();
+		//subdiv();
+		return;
+	}
 }
 
 /******************************************************************************
 @author Jeremy Gamet
 
 @par Description:
-Insert method for the quadtree class.
+Clear method for the quadtree class.
 ******************************************************************************/
 template <class datatype>
 void quadtree<datatype>::clear()
 {
-	//TBD
+	if(root != nullptr)
+	{
+		if(root -> isPoint == false )
+			root.clear();
+	}
+	else return;
+}
+
+/******************************************************************************
+@author Jeremy Gamet
+
+@par Description:
+Clear method for the quadtree's quad struct.
+******************************************************************************/
+template<class datatype>
+void quadtree<datatype>::quad::clear()
+{
+	if (tl->isPoint)
+		delete tl;
+	else tl.clear();
+
+	if (tr->isPoint)
+		delete tr;
+	else tr.clear();
+
+	if (bl->isPoint)
+		delete bl;
+	else bl.clear();
+
+	if (br->isPoint)
+		delete br;
+	else br.clear();
+
+	return;
 }
 
 
