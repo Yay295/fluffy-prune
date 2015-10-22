@@ -1,3 +1,44 @@
+/******************************************************************************
+@file
+
+@mainpage Program 2: Quadtree Encoding
+
+@section course_section Course Information
+
+@author Jeremy Gamet and John Colton
+
+@date Monday October 26, 2015
+
+@par Professor: Paul Hinker
+
+@par Course: CSC 300 - Fall 2015
+
+@section program_section Program Information
+
+@details This program reads an image from a .bmp file, stores it in a quadtree,
+         and displays the original image and the quadtree image side-by-side.
+		 The quadtree image may be compressed by a given quality factor.
+
+@section compile_section Compiling and Usage
+
+@par Compiling Instructions:
+
+@par Usage:
+
+@section todo_bugs_changelog Todo, Bugs, and Changelog
+
+@todo Finish Program
+
+@bug Probably
+
+@par Changelog:
+	@verbatim
+	Date               Change
+	----------------   --------------------------------------------------------
+	October 21, 2015   Added lots of documentation.
+	@endverbatim
+******************************************************************************/
+
 // Need to implement operator != for our datatype. != operator will check the
 // global QUALITY to determine if they're 'not equal'.
 
@@ -6,9 +47,9 @@
 #include <iostream>
 #include "quadtree.cpp"
 
-
 bool DRAW_LINES = false;
 double QUALITY = 100;
+quadtree<int> QUAD_IMAGE ( 500, 500 );
 
 
 /******************************************************************************
@@ -112,6 +153,16 @@ functions are called here.
 ******************************************************************************/
 int main( int argc, char * argv[] )
 {
+	QUAD_IMAGE.insert( 0, 0, 0 );
+	QUAD_IMAGE.insert( 10, 0, 1 );
+	QUAD_IMAGE.insert( 11, 0, 2 );
+	QUAD_IMAGE.insert( 11, 0, 3 );
+	QUAD_IMAGE.insert( 12, 0, 3 );
+
+	std::cout << "quadtree size in bytes:       " << QUAD_IMAGE.size() << '\n'
+			  << "number of quads in the tree:  " << QUAD_IMAGE.numQuads() << '\n'
+			  << "number of points in the tree: " << QUAD_IMAGE.numPoints() << "\n\n";
+
 	if ( argc < 2 || argc > 3 )
 	{
 		printUsageInstructions();
