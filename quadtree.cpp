@@ -76,6 +76,7 @@ class quadtree
 	public:
 
 	quadtree( const size_t W, const size_t H );
+	quadtree( const quadtree<datatype> &obj );
 	~quadtree();
 	bool insert( const size_t X, const size_t Y, const datatype & D );
 	void quadtree<datatype>::subdiv( const datatype ** const image, const datatype & eps );
@@ -84,7 +85,6 @@ class quadtree
 	size_t numPoints();
 	size_t size();
 };
-
 
 /******************************************************************************
 @author John Colton
@@ -135,6 +135,18 @@ The quad struct constructor.
 template<class datatype>
 quadtree<datatype>::quad::quad( const size_t X, const size_t Y, const size_t W, const size_t H )
 	: x( X ), y( Y ), width( W ), height( H ) {}
+
+/******************************************************************************
+@author Jeremy Gamet
+
+@par Description:
+The copy constructor for this quadtree class.
+******************************************************************************/
+template<class datatype>
+quadtree<datatype>::quadtree(const quadtree<datatype> &obj) 
+{
+	quadtree<datatype> * ptr = root;
+}
 
 /******************************************************************************
 @author John Colton
@@ -406,51 +418,6 @@ bool quadtree<datatype>::insert( const size_t X, const size_t Y, const datatype 
 	}
 
 	else return false;
-}
-
-/******************************************************************************
-@author Jeremy Gamet
-
-@par Description:
-Inserts an image into the quadtree.
-
-@param[in] image - The image being inserted.
-@param[in] eps   - An epsilon value to use for comparing how similar two pixels
-                   are to each other.
-******************************************************************************/
-template<class datatype>
-void quadtree<datatype>::subdiv( const datatype ** const image, const datatype & eps )
-{
-	int i, j = 0;
-	datatype curr, sum, min, max, avg = 0;
-
-	for ( i = 0; i < height; ++i )
-	{
-		for ( j = 0; j < width; ++j )
-		{
-			curr = image[i][j];
-			sum += curr;
-			if ( max < curr )
-				max = curr;
-			if ( min > curr )
-				min = curr;
-			if ( i == height - 1 && j == width - 1 )
-				avg = sum / ( height * width );
-		}
-	}
-
-	if ( max - min < eps )
-	{
-		//insert();
-		return;
-	}
-
-	else
-	{
-		//insert();
-		//subdiv();
-		return;
-	}
 }
 
 /******************************************************************************

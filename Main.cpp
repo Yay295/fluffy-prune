@@ -144,6 +144,69 @@ void onkeypress( const unsigned char key, const int x, const int y )
 	}
 }
 
+
+/******************************************************************************
+@author Jeremy Gamet
+
+@par Description:
+Inserts an image into the quadtree.
+
+@param[in] image - The image being inserted.
+@param[in] eps   - An epsilon value to use for comparing how similar two pixels
+                   are to each other.
+******************************************************************************/
+template<class datatype>
+void subdiv( quadtree<datatype> & tree, const datatype ** const image, 
+const size_t x1, const size_t x2, const size_t y1, const size_t y2, 
+const datatype & eps )
+{
+	datatype avg = checkval(image, x1, x2, y1, y2, eps);
+
+	if ( avg ) //if pass checkval pass the average value as data
+	{
+		tree.insert(x1,y1,avg);
+		return;
+	}
+
+	else //if fails the checkval 
+	{
+		subdiv(tree, image, x1, x2/2, y1, y2/2, eps); //tl
+		subdiv(tree, image, x2/2, x2, y1, y2/2, eps); //tr
+		subdiv(tree, image, x1, x2/2, y2/2, y2, eps); //bl
+		subdiv(tree, image, x2/2, x2, y2, y2, eps); //br
+	}
+}
+
+template<class datatype>
+datatype checkval(const datatype ** const image, 
+const size_t x1, const size_t x2, const size_t y1,
+const size_t y2, const datatype & eps)
+{
+	int i, j = 0;
+	datatype curr, sum, min, max, avg = 0;
+
+	for ( i = x1; i < x2; ++i )
+	{
+		for ( j = y1; j < y2; ++j )
+		{
+			curr = image[i][j];
+			sum += curr;
+			if ( max < curr )
+				max = curr;
+			if ( min > curr )
+				min = curr;
+			if ( i == height - 1 && j == width - 1 )
+				avg = sum / ( height * width );
+		}
+	}
+
+	if (max-min < 2*eps)
+		return avg;
+	else 
+		return 0;
+}
+
+
 /******************************************************************************
 @author John Colton
 
