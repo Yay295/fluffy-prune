@@ -49,8 +49,8 @@
 					   points' variables instead of having separate variables
 					   for each.
 
-					   Added BMPload.cpp and loadImage() function. Fixed
-					   Doxygen tags.
+					   Added code to load a BMP file and loadImage() function.
+					   Fixed Doxygen tags.
 	@endverbatim
 ******************************************************************************/
 
@@ -60,12 +60,7 @@
 
 #include <GL/freeglut.h>
 #include <iostream>
-
-#pragma warning(push)
-#pragma warning(disable:4996)
-#include "BMPload.cpp"
-#pragma warning(pop)
-
+#include "loadBMP.cpp"
 #include "quadtree.cpp"
 
 bool DRAW_LINES = false;
@@ -113,13 +108,13 @@ compresses it into QUAD_IMAGE.
 *****************************************************************************/
 bool loadImage( const char * const filename )
 {
-	int rows, columns;
+	size_t rows, columns;
 
 	if ( loadBMP( filename, rows, columns, ORIGINAL_IMAGE ) )
 	{
 		const size_t height = rows, width = columns;
 
-		QUAD_IMAGE = new quadtree<unsigned char>( width, height );
+		QUAD_IMAGE = new quadtree<char>( width, height );
 
 		for ( size_t y = 0; y < height; ++y )
 		{
