@@ -19,6 +19,8 @@
          and displays the original image and the quadtree image side-by-side.
 		 The quadtree image may be compressed by a given quality factor.
 
+		 This program supports images of any size.
+
 @section compile_section Compiling and Usage
 
 @par Compiling Instructions:
@@ -36,14 +38,18 @@
 	Date               Change
 	----------------   --------------------------------------------------------
 	October 21, 2015   Added lots of documentation.
+	October 22, 2015   Added optimize() functions to quadtree and quad.
+	                   Improved quad::insert(point*) to handle nullptr's.
+	October 23, 2015   Finished quad::optimize(). Improved point::contains().
+	                   Added quad::getData() and quadtree::getData.
 	@endverbatim
 ******************************************************************************/
 
 // Need to implement operator != for our datatype. != operator will check the
 // global QUALITY to determine if they're 'not equal'.
 
-
 #include <GL/freeglut.h>
+#endif
 #include <iostream>
 #include "quadtree.cpp"
 
@@ -150,10 +156,17 @@ void onkeypress( const unsigned char key, const int x, const int y )
 
 @par Description:
 Inserts an image into the quadtree.
+Note: This function calls on checkval().
 
+@param[in,out] tree - The structure being inserted into.
 @param[in] image - The image being inserted.
-@param[in] eps   - An epsilon value to use for comparing how similar two pixels
-                   are to each other.
+@param[in] x1 - Top left x coord of area to be inserted.
+@param[in] x2 - Bottom right x coord of area to be inserted.
+@param[in] y1 - Top left y coord of area to be inserted.
+@param[in] y2 - Bottom right y coord of area to be inserted.
+@param[in] eps   - An epsilon value to determine deviation from
+				    a mean value in a range of pixel values.
+
 ******************************************************************************/
 template<class datatype>
 void subdiv( quadtree<datatype> & tree, const datatype ** const image, 
@@ -177,13 +190,31 @@ const datatype & eps )
 	}
 }
 
+/******************************************************************************
+@author Jeremy Gamet
+
+@par Description:
+Tests a range of values for deviation from a calculated mean. 
+Note: This function is called by subdiv().
+
+@param[in] image - 2D matrix containing pixel values to be checked.
+@param[in] x1 - Top left x coord of area to be checked.
+@param[in] x2 - Bottom right x coord of area to be checked.
+@param[in] y1 - Top left y coord of area to be checked.
+@param[in] y2 - Bottom right y coord of area to be checked.
+@param[in] eps   - An epsilon value to determine deviation from
+				    a mean value in a range of pixel values.
+
+******************************************************************************/
 template<class datatype>
 datatype checkval(const datatype ** const image, 
 const size_t x1, const size_t x2, const size_t y1,
 const size_t y2, const datatype & eps)
 {
-	int i, j = 0;
+	size_t i, j, height, width = 0;
 	datatype curr, sum, min, max, avg = 0;
+	height = y2-y1;
+	width = x2-x1;
 
 	for ( i = x1; i < x2; ++i )
 	{
@@ -197,6 +228,8 @@ const size_t y2, const datatype & eps)
 				min = curr;
 			if ( i == height - 1 && j == width - 1 )
 				avg = sum / ( height * width );
+			if (max-min > 0 && max-min > 2 * eps) //worst case reached
+				return 0;
 		}
 	}
 
@@ -217,10 +250,12 @@ functions are called here.
 int main( int argc, char * argv[] )
 {
 	QUAD_IMAGE.insert( 0, 0, 0 );
-	QUAD_IMAGE.insert( 10, 0, 1 );
-	QUAD_IMAGE.insert( 11, 0, 2 );
-	QUAD_IMAGE.insert( 11, 0, 3 );
-	QUAD_IMAGE.insert( 12, 0, 3 );
+	QUAD_IMAGE.insert( 0, 0, 1 );
+	QUAD_IMAGE.insert( 0, 1, 1 );
+	QUAD_IMAGE.insert( 1, 0, 1 );
+	QUAD_IMAGE.insert( 1, 1, 1 );
+
+	QUAD_IMAGE.optimize();
 
 	std::cout << "quadtree size in bytes:       " << QUAD_IMAGE.size() << '\n'
 			  << "number of quads in the tree:  " << QUAD_IMAGE.numQuads() << '\n'
