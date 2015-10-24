@@ -41,7 +41,13 @@
 	October 22, 2015   Added optimize() functions to quadtree and quad.
 	                   Improved quad::insert(point*) to handle nullptr's.
 	October 23, 2015   Finished quad::optimize(). Improved point::contains().
-	                   Added quad::getData() and quadtree::getData.
+	                   Added quad::getData() and quadtree::getData().
+
+					   Fixed bugs in quad::optimize(), quad::contains(), and
+					   quad::insert(). Changed quad constructor to also take
+					   some data. Changed point and quad structs to use the
+					   points' variables instead of having separate variables
+					   for each.
 	@endverbatim
 ******************************************************************************/
 
@@ -150,6 +156,34 @@ void onkeypress( const unsigned char key, const int x, const int y )
 	}
 }
 
+void test()
+{
+	QUAD_IMAGE.insert( 0, 0, 0 );
+	QUAD_IMAGE.insert( 0, 0, 1 );
+	QUAD_IMAGE.insert( 0, 1, 1 );
+	QUAD_IMAGE.insert( 0, 2, 1 );
+	QUAD_IMAGE.insert( 1, 0, 1 );
+	QUAD_IMAGE.insert( 1, 1, 1 );
+	QUAD_IMAGE.insert( 1, 2, 1 );
+	QUAD_IMAGE.insert( 2, 0, 1 );
+	QUAD_IMAGE.insert( 2, 1, 1 );
+	QUAD_IMAGE.insert( 2, 2, 1 );
+
+	std::cout << "quadtree size in bytes:       " << QUAD_IMAGE.size() << '\n'
+			  << "number of quads in the tree:  " << QUAD_IMAGE.numQuads() << '\n'
+			  << "number of points in the tree: " << QUAD_IMAGE.numPoints() << "\n\n";
+
+	std::cout << QUAD_IMAGE.getData( 1, 1 ) << '\n';
+
+	QUAD_IMAGE.optimize();
+
+	std::cout << "quadtree size in bytes:       " << QUAD_IMAGE.size() << '\n'
+			  << "number of quads in the tree:  " << QUAD_IMAGE.numQuads() << '\n'
+			  << "number of points in the tree: " << QUAD_IMAGE.numPoints() << "\n\n";
+
+	std::cout << QUAD_IMAGE.getData( 1, 1 ) << '\n';
+}
+
 /******************************************************************************
 @author John Colton
 
@@ -159,17 +193,7 @@ functions are called here.
 ******************************************************************************/
 int main( int argc, char * argv[] )
 {
-	QUAD_IMAGE.insert( 0, 0, 0 );
-	QUAD_IMAGE.insert( 0, 0, 1 );
-	QUAD_IMAGE.insert( 0, 1, 1 );
-	QUAD_IMAGE.insert( 1, 0, 1 );
-	QUAD_IMAGE.insert( 1, 1, 1 );
-
-	QUAD_IMAGE.optimize();
-
-	std::cout << "quadtree size in bytes:       " << QUAD_IMAGE.size() << '\n'
-			  << "number of quads in the tree:  " << QUAD_IMAGE.numQuads() << '\n'
-			  << "number of points in the tree: " << QUAD_IMAGE.numPoints() << "\n\n";
+	test();
 
 	if ( argc < 2 || argc > 3 )
 	{
