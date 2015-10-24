@@ -24,7 +24,7 @@ bool loadBMP( const char * const filename, size_t & rows, size_t & columns, char
 		columns = readLong( in );
 		rows = readLong( in );
 		in.ignore( 2 ); // Skip one field
-		short bitsPerPixel = readShort( in );
+		const short bitsPerPixel = readShort( in );
 		in.ignore( 24 ); // Skip 6 more fields
 
 		// check for valid image metadata
@@ -107,7 +107,7 @@ int readLong( std::istream & in )
 	bytes[3] = char( in.get() );
 
 	// Pack together
-	char ret = bytes[3];
+	int ret = bytes[3];
 	ret <<= 8;
 	ret |= bytes[2];
 	ret <<= 8;
