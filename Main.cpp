@@ -1,4 +1,4 @@
-/******************************************************************************
+/**************************************************************************//**
 @file
 
 @mainpage Program 2: Quadtree Encoding
@@ -48,6 +48,9 @@
 					   some data. Changed point and quad structs to use the
 					   points' variables instead of having separate variables
 					   for each.
+
+					   Added BMPload.cpp and loadImage() function. Fixed
+					   Doxygen tags.
 	@endverbatim
 ******************************************************************************/
 
@@ -57,14 +60,21 @@
 
 #include <GL/freeglut.h>
 #include <iostream>
+
+#pragma warning(push)
+#pragma warning(disable:4996)
+#include "BMPload.cpp"
+#pragma warning(pop)
+
 #include "quadtree.cpp"
 
 bool DRAW_LINES = false;
 double QUALITY = 100;
-quadtree<int> QUAD_IMAGE ( 500, 500 );
+quadtree<char> * QUAD_IMAGE;
+char * ORIGINAL_IMAGE;
 
 
-/******************************************************************************
+/**************************************************************************//**
 @author John Colton
 
 @par Description:
@@ -89,7 +99,45 @@ void printUsageInstructions()
 		"Press 'Enter' to exit the program.";
 }
 
-/******************************************************************************
+/**************************************************************************//**
+@author John Colton
+
+@par Description:
+This function loads the given bmp image into ORIGINAL_IMAGE, and then
+compresses it into QUAD_IMAGE.
+
+@param[in] filename - The name of the bmp file to read.
+
+@returns true  - The image was successfully loaded.
+@returns false - The image was not loaded.
+*****************************************************************************/
+bool loadImage( const char * const filename )
+{
+	int rows, columns;
+
+	if ( loadBMP( filename, rows, columns, ORIGINAL_IMAGE ) )
+	{
+		const size_t height = rows, width = columns;
+
+		QUAD_IMAGE = new quadtree<unsigned char>( width, height );
+
+		for ( size_t y = 0; y < height; ++y )
+		{
+			for ( size_t x = 0; x < width; ++x )
+			{
+				QUAD_IMAGE->insert( x, y, ORIGINAL_IMAGE[width*y+x] );
+			}
+		}
+
+		QUAD_IMAGE->optimize();
+
+		return true;
+	}
+
+	else return false;
+}
+
+/**************************************************************************//**
 @author ???
 
 @par Description:
@@ -99,7 +147,7 @@ void drawImages()
 {
 }
 
-/******************************************************************************
+/**************************************************************************//**
 @author ???
 
 @par Description:
@@ -110,7 +158,7 @@ void drawLines()
 {
 }
 
-/******************************************************************************
+/**************************************************************************//**
 @author John Colton
 
 @par Description:
@@ -132,7 +180,7 @@ void display()
 	glFinish();
 }
 
-/******************************************************************************
+/**************************************************************************//**
 @author John Colton
 
 @par Description:
@@ -158,33 +206,31 @@ void onkeypress( const unsigned char key, const int x, const int y )
 
 void test()
 {
-	QUAD_IMAGE.insert( 0, 0, 0 );
-	QUAD_IMAGE.insert( 0, 0, 1 );
-	QUAD_IMAGE.insert( 0, 1, 1 );
-	QUAD_IMAGE.insert( 0, 2, 1 );
-	QUAD_IMAGE.insert( 1, 0, 1 );
-	QUAD_IMAGE.insert( 1, 1, 1 );
-	QUAD_IMAGE.insert( 1, 2, 1 );
-	QUAD_IMAGE.insert( 2, 0, 1 );
-	QUAD_IMAGE.insert( 2, 1, 1 );
-	QUAD_IMAGE.insert( 2, 2, 1 );
+	quadtree<int> test( 500, 500 );
 
-	std::cout << "quadtree size in bytes:       " << QUAD_IMAGE.size() << '\n'
-			  << "number of quads in the tree:  " << QUAD_IMAGE.numQuads() << '\n'
-			  << "number of points in the tree: " << QUAD_IMAGE.numPoints() << "\n\n";
+	test.insert( 0, 0, 0 );
+	test.insert( 0, 0, 1 );
+	test.insert( 0, 1, 1 );
+	test.insert( 0, 2, 1 );
+	test.insert( 1, 0, 1 );
+	test.insert( 1, 1, 1 );
+	test.insert( 1, 2, 1 );
+	test.insert( 2, 0, 1 );
+	test.insert( 2, 1, 1 );
+	test.insert( 2, 2, 1 );
 
-	std::cout << QUAD_IMAGE.getData( 1, 1 ) << '\n';
+	std::cout << "quadtree size in bytes:       " << test.size() << '\n'
+			  << "number of quads in the tree:  " << test.numQuads() << '\n'
+			  << "number of points in the tree: " << test.numPoints() << "\n\n";
 
-	QUAD_IMAGE.optimize();
+	test.optimize();
 
-	std::cout << "quadtree size in bytes:       " << QUAD_IMAGE.size() << '\n'
-			  << "number of quads in the tree:  " << QUAD_IMAGE.numQuads() << '\n'
-			  << "number of points in the tree: " << QUAD_IMAGE.numPoints() << "\n\n";
-
-	std::cout << QUAD_IMAGE.getData( 1, 1 ) << '\n';
+	std::cout << "quadtree size in bytes:       " << test.size() << '\n'
+			  << "number of quads in the tree:  " << test.numQuads() << '\n'
+			  << "number of points in the tree: " << test.numPoints() << "\n\n";
 }
 
-/******************************************************************************
+/**************************************************************************//**
 @author John Colton
 
 @par Description:
@@ -203,6 +249,8 @@ int main( int argc, char * argv[] )
 
 		return 0;
 	}
+
+	if ( !loadImage( argv[1] ) ) return 0;
 
 	// Glut Init Functions
 	glutInitWindowSize( 600, 600 );
@@ -223,4 +271,6 @@ int main( int argc, char * argv[] )
 	glutKeyboardFunc( onkeypress );
 
 	glutMainLoop();
+	
+	delete[] QUAD_IMAGE;
 }
