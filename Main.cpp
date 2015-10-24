@@ -31,7 +31,8 @@
 
 @todo Finish Program
 
-@bug Probably
+@bug Only one third of the compressed image is shown.
+@bug There are some pure black/white pixels in the compressed image.
 
 @par Changelog:
 	@verbatim
@@ -50,12 +51,10 @@
 					   for each.
 
 					   Added code to load a BMP file and loadImage() function.
-					   Fixed Doxygen tags.
+					   Fixed Doxygen tags. Finished drawImages(). Worked on
+					   loadImage().
 	@endverbatim
 ******************************************************************************/
-
-// Need to implement operator != for our datatype. != operator will check the
-// global QUALITY to determine if they're 'not equal'.
 
 
 #include <GL/freeglut.h>
@@ -63,10 +62,29 @@
 #include "loadBMP.cpp"
 #include "quadtree.cpp"
 
+
+// A pixel struct for holding pixel data.
+struct pixel
+{
+	char r, g, b;
+
+	bool operator == ( const pixel & rhs ) const
+	{
+		return ( r == rhs.r && g == rhs.g && b == rhs.b );
+	}
+
+	bool operator != ( const pixel & rhs ) const
+	{
+		return ( r != rhs.r || g != rhs.g || b != rhs.b );
+	}
+};
+
+
 bool DRAW_LINES = false;
 double QUALITY = 100;
-quadtree<char> * QUAD_IMAGE;
-char * ORIGINAL_IMAGE;
+quadtree<pixel> * QUAD_IMAGE;
+char * ORIGINAL_IMAGE, * COMPRESSED_IMAGE;
+size_t IMAGE_WIDTH, IMAGE_HEIGHT;
 
 
 /**************************************************************************//**
@@ -99,7 +117,8 @@ void printUsageInstructions()
 
 @par Description:
 This function loads the given bmp image into ORIGINAL_IMAGE, and then
-compresses it into QUAD_IMAGE.
+compresses it into QUAD_IMAGE. It then reads the compressed image from
+QUAD_IMAGE into COMPRESSED_IMAGE for easier glut display.
 
 @param[in] filename - The name of the bmp file to read.
 
@@ -108,23 +127,52 @@ compresses it into QUAD_IMAGE.
 *****************************************************************************/
 bool loadImage( const char * const filename )
 {
-	size_t rows, columns;
-
-	if ( loadBMP( filename, rows, columns, ORIGINAL_IMAGE ) )
+	if ( loadBMP( filename, IMAGE_WIDTH, IMAGE_HEIGHT, ORIGINAL_IMAGE ) )
 	{
-		const size_t height = rows, width = columns;
+		QUAD_IMAGE = new quadtree<pixel>( IMAGE_WIDTH, IMAGE_HEIGHT );
 
-		QUAD_IMAGE = new quadtree<char>( width, height );
-
-		for ( size_t y = 0; y < height; ++y )
+		for ( size_t y = 0; y < IMAGE_HEIGHT; ++y )
 		{
-			for ( size_t x = 0; x < width; ++x )
+			for ( size_t x = 0; x < IMAGE_WIDTH; ++x )
 			{
-				QUAD_IMAGE->insert( x, y, ORIGINAL_IMAGE[width*y+x] );
+				const pixel temp = { ORIGINAL_IMAGE[IMAGE_WIDTH*y+3*x],
+					                 ORIGINAL_IMAGE[IMAGE_WIDTH*y+3*x+1],
+					                 ORIGINAL_IMAGE[IMAGE_WIDTH*y+3*x+2] };
+
+				QUAD_IMAGE->insert( x, y, temp );
 			}
 		}
 
+
+		std::cout << "Size of BMP image: "
+				  << 3 * IMAGE_WIDTH * IMAGE_HEIGHT * sizeof( ORIGINAL_IMAGE ) << "\n\n";
+
+		std::cout << "Before optimize() is called\n---------------------------------------\n"
+			<< "quadtree size in bytes:       " << QUAD_IMAGE->size() << '\n'
+			<< "number of quads in the tree:  " << QUAD_IMAGE->numQuads() << '\n'
+			<< "number of points in the tree: " << QUAD_IMAGE->numPoints() << "\n\n";
+
 		QUAD_IMAGE->optimize();
+
+		std::cout << "After optimize() is called\n--------------------------------------\n"
+			<< "quadtree size in bytes:       " << QUAD_IMAGE->size() << '\n'
+			<< "number of quads in the tree:  " << QUAD_IMAGE->numQuads() << '\n'
+			<< "number of points in the tree: " << QUAD_IMAGE->numPoints() << "\n\n";
+
+
+		COMPRESSED_IMAGE = new char[IMAGE_WIDTH*IMAGE_HEIGHT*3];
+
+		for ( size_t y = 0; y < IMAGE_HEIGHT; ++y )
+		{
+			for ( size_t x = 0; x < IMAGE_WIDTH; ++x )
+			{
+				const pixel temp = QUAD_IMAGE->getData( x, y );
+				COMPRESSED_IMAGE[IMAGE_WIDTH*y+3*x] = temp.r;
+				COMPRESSED_IMAGE[IMAGE_WIDTH*y+3*x+1] = temp.g;
+				COMPRESSED_IMAGE[IMAGE_WIDTH*y+3*x+2] = temp.b;
+			}
+		}
+
 
 		return true;
 	}
@@ -133,13 +181,20 @@ bool loadImage( const char * const filename )
 }
 
 /**************************************************************************//**
-@author ???
+@author John Colton
 
 @par Description:
 This function draws the original and quadtree compressed images to the screen.
 *****************************************************************************/
 void drawImages()
 {
+	glRasterPos2i( 0, 0 );
+
+	glDrawPixels( IMAGE_WIDTH, IMAGE_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, ORIGINAL_IMAGE );
+
+	glRasterPos2i( IMAGE_WIDTH + 10, 0 );
+
+	glDrawPixels( IMAGE_WIDTH, IMAGE_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, COMPRESSED_IMAGE );
 }
 
 /**************************************************************************//**
@@ -250,15 +305,13 @@ int main( int argc, char * argv[] )
 	// Glut Init Functions
 	glutInitWindowSize( 600, 600 );
 	glutInitWindowPosition( 0, 0 );
-	glutInitDisplayMode( GLUT_ALPHA );
+	glutInitDisplayMode( GLUT_RGB );
 	glutInit( &argc, argv );
 
 	glutCreateWindow( "Quadtree Image Encoding" );
 
 	// GL Init Functions
-	glClearColor( 1, 1, 1, 1 );
-	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-	glEnable( GL_BLEND );
+	glClearColor( 0, 0, 0, 0 ); // Black
 	glMatrixMode( GL_PROJECTION );
 
 	// Glut Event Functions
@@ -268,4 +321,5 @@ int main( int argc, char * argv[] )
 	glutMainLoop();
 	
 	delete[] QUAD_IMAGE;
+	delete[] COMPRESSED_IMAGE;
 }
