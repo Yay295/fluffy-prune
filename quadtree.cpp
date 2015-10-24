@@ -2,7 +2,7 @@
 #define QUADTREE_H
 
 
-/******************************************************************************
+/**************************************************************************//**
 @author Jeremy Gamet and John Colton
 
 @par Description:
@@ -90,7 +90,7 @@ class quadtree
 };
 
 
-/******************************************************************************
+/**************************************************************************//**
 @author John Colton
 
 @par Description:
@@ -99,7 +99,7 @@ The empty point struct constructor.
 template<class datatype>
 quadtree<datatype>::point::point() {}
 
-/******************************************************************************
+/**************************************************************************//**
 @author John Colton
 
 @par Description:
@@ -113,7 +113,7 @@ template<class datatype>
 quadtree<datatype>::point::point( const size_t X, const size_t Y, const datatype & D )
 	: x( X ), y( Y ), data( D ) {}
 
-/******************************************************************************
+/**************************************************************************//**
 @author John Colton
 
 @par Description:
@@ -124,7 +124,7 @@ This point struct function returns the data at this point.
 template<class datatype>
 datatype quadtree<datatype>::point::getData( const size_t X, const size_t Y ) const { return data; }
 
-/******************************************************************************
+/**************************************************************************//**
 @author John Colton
 
 @par Description:
@@ -143,7 +143,7 @@ bool quadtree<datatype>::point::contains( const size_t X, const size_t Y ) const
 }
 
 
-/******************************************************************************
+/**************************************************************************//**
 @author John Colton
 
 @par Description:
@@ -158,7 +158,7 @@ template<class datatype>
 quadtree<datatype>::quad::quad( const size_t X, const size_t Y, const size_t W, const size_t H, const datatype & D )
 	: point( X, Y, D ), width( W ), height( H ) {}
 
-/******************************************************************************
+/**************************************************************************//**
 @author John Colton
 
 @par Description:
@@ -173,7 +173,7 @@ quadtree<datatype>::quad::~quad()
 	delete br;
 }
 
-/******************************************************************************
+/**************************************************************************//**
 @author John Colton
 
 @par Description:
@@ -230,7 +230,7 @@ datatype quadtree<datatype>::quad::getData( const size_t X, const size_t Y ) con
 	return data;
 }
 
-/******************************************************************************
+/**************************************************************************//**
 @author John Colton
 
 @par Description:
@@ -248,7 +248,7 @@ bool quadtree<datatype>::quad::contains( const size_t X, const size_t Y ) const
 	return ( X >= x && X < ( x + width ) && Y >= y && Y < ( y + height ) );
 }
 
-/******************************************************************************
+/**************************************************************************//**
 @author John Colton
 
 @par Description:
@@ -270,7 +270,7 @@ size_t quadtree<datatype>::quad::insert( const point * const P )
 	return ( P == nullptr ? -1 : insert( P->x, P->y, P->data ) );
 }
 
-/******************************************************************************
+/**************************************************************************//**
 @author John Colton
 
 @par Description:
@@ -411,7 +411,7 @@ size_t quadtree<datatype>::quad::insert( const size_t X, const size_t Y, const d
 	return 0;
 }
 
-/******************************************************************************
+/**************************************************************************//**
 @author John Colton
 
 @par Description:
@@ -904,7 +904,7 @@ size_t quadtree<datatype>::quad::optimize( size_t & numQuads, size_t & numPoints
 
 
 
-/******************************************************************************
+/**************************************************************************//**
 @author Jeremy Gamet and John Colton
 
 @par Description:
@@ -913,7 +913,7 @@ Constructor for the quadtree class.
 template<class datatype>
 quadtree<datatype>::quadtree( const size_t W, const size_t H ) : width( W ), height( H ) {}
 
-/******************************************************************************
+/**************************************************************************//**
 @author Jeremy Gamet and John Colton
 
 @par Description:
@@ -925,7 +925,7 @@ quadtree<datatype>::~quadtree()
 	delete root;
 }
 
-/******************************************************************************
+/**************************************************************************//**
 @author Jeremy Gamet and John Colton
 
 @par Description:
@@ -976,7 +976,7 @@ bool quadtree<datatype>::insert( const size_t X, const size_t Y, const datatype 
 	else return false;
 }
 
-/******************************************************************************
+/**************************************************************************//**
 @author John Colton
 
 @par Description:
@@ -994,7 +994,7 @@ datatype quadtree<datatype>::getData( const size_t X, const size_t Y ) const
 	return root->getData( X, Y );
 }
 
-/******************************************************************************
+/**************************************************************************//**
 @author Jeremy Gamet
 
 @par Description:
@@ -1039,7 +1039,7 @@ void quadtree<datatype>::subdiv( const datatype ** const image, const datatype &
 	}
 }
 
-/******************************************************************************
+/**************************************************************************//**
 @author John Colton
 
 @par Description:
@@ -1051,7 +1051,7 @@ void quadtree<datatype>::optimize()
 	if ( root != nullptr ) root->optimize( count.quads, count.points );
 }
 
-/******************************************************************************
+/**************************************************************************//**
 @author Jeremy Gamet and John Colton
 
 @par Description:
@@ -1067,7 +1067,7 @@ void quadtree<datatype>::clear()
 	root = nullptr;
 }
 
-/******************************************************************************
+/**************************************************************************//**
 @author John Colton
 
 @par Description:
@@ -1081,7 +1081,7 @@ size_t quadtree<datatype>::numQuads()
 	return count.quads;
 }
 
-/******************************************************************************
+/**************************************************************************//**
 @author John Colton
 
 @par Description:
@@ -1095,7 +1095,7 @@ size_t quadtree<datatype>::numPoints()
 	return count.points;
 }
 
-/******************************************************************************
+/**************************************************************************//**
 @author John Colton
 
 @par Description:
