@@ -48,6 +48,10 @@
 // Need to implement operator != for our datatype. != operator will check the
 // global QUALITY to determine if they're 'not equal'.
 
+#ifdef __APPLE__
+#include <GLUT/glut.h>
+typedef long unsigned int size_t;
+#else
 #include <GL/freeglut.h>
 #endif
 #include <iostream>

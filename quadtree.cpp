@@ -1,6 +1,6 @@
 #ifndef QUADTREE_H
 #define QUADTREE_H
-typedef long unsigned int size_t;
+//typedef long unsigned int size_t;
 
 /******************************************************************************
 @author Jeremy Gamet and John Colton
