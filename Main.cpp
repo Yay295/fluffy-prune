@@ -41,20 +41,10 @@
 	October 21, 2015   Added lots of documentation.
 	October 22, 2015   Added optimize() functions to quadtree and quad.
 	                   Improved quad::insert(point*) to handle nullptr's.
+
+					   Moved quadtree::subdiv() to Main.cpp as checkval() and
+					   subdiv().
 	October 23, 2015   Finished quad::optimize(). Improved point::contains().
-<<<<<<< HEAD
-	                   Added quad::getData() and quadtree::getData.
-	@endverbatim
-******************************************************************************/
-
-// Need to implement operator != for our datatype. != operator will check the
-// global QUALITY to determine if they're 'not equal'.
-
-#ifdef __APPLE__
-#include <GLUT/glut.h>
-typedef long unsigned int size_t;
-#else
-=======
 	                   Added quad::getData() and quadtree::getData().
 
 					   Fixed bugs in quad::optimize(), quad::contains(), and
@@ -69,10 +59,13 @@ typedef long unsigned int size_t;
 	@endverbatim
 ******************************************************************************/
 
-
->>>>>>> origin/master
+#ifdef __APPLE__
+#include <GLUT/glut.h>
+typedef unsigned int size_t;
+#else
 #include <GL/freeglut.h>
 #endif
+
 #include <iostream>
 #include "loadBMP.cpp"
 #include "quadtree.cpp"
@@ -125,6 +118,89 @@ void printUsageInstructions()
 		"argument is not specified, it will be set to 100.\n\n"
 		
 		"Press 'Enter' to exit the program.";
+}
+
+/**************************************************************************//**
+@author Jeremy Gamet
+
+@par Description:
+Tests a range of values for deviation from a calculated mean.
+Note: This function is called by subdiv().
+
+@param[in] image - 2D matrix containing pixel values to be checked.
+@param[in] x1    - Top left x coord of area to be checked.
+@param[in] x2    - Bottom right x coord of area to be checked.
+@param[in] y1    - Top left y coord of area to be checked.
+@param[in] y2    - Bottom right y coord of area to be checked.
+@param[in] eps   - An epsilon value to determine deviation from a mean value in
+                   a range of pixel values.
+******************************************************************************/
+template<class datatype>
+datatype checkval( const datatype ** const image,
+	const size_t x1, const size_t x2, const size_t y1,
+	const size_t y2, const datatype & eps )
+{
+	size_t i, j, height, width = 0;
+	datatype curr, sum, min, max, avg = 0;
+	height = y2 - y1;
+	width = x2 - x1;
+
+	for ( i = x1; i < x2; ++i )
+	{
+		for ( j = y1; j < y2; ++j )
+		{
+			curr = image[i][j];
+			sum += curr;
+			if ( max < curr )
+				max = curr;
+			if ( min > curr )
+				min = curr;
+			if ( i == height - 1 && j == width - 1 )
+				avg = sum / ( height * width );
+			if ( max - min > 0 && max - min > 2 * eps ) //worst case reached
+				return 0;
+		}
+	}
+
+	if ( max - min < 2 * eps )
+		return avg;
+	else
+		return 0;
+}
+
+/**************************************************************************//**
+@author Jeremy Gamet
+
+@par Description:
+Inserts an image into the quadtree.
+Note: This function calls on checkval().
+
+@param[in,out] tree - The structure being inserted into.
+@param[in] image    - The image being inserted.
+@param[in] x1       - Top left x coord of area to be inserted.
+@param[in] x2       - Bottom right x coord of area to be inserted.
+@param[in] y1       - Top left y coord of area to be inserted.
+@param[in] y2       - Bottom right y coord of area to be inserted.
+@param[in] eps      - An epsilon value to determine deviation from a mean value
+                      in a range of pixel values.
+******************************************************************************/
+template<class datatype>
+void subdiv( quadtree<datatype> & tree, const datatype ** const image,
+	const size_t x1, const size_t x2, const size_t y1, const size_t y2,
+	const datatype & eps )
+{
+	const datatype avg = checkval( image, x1, x2, y1, y2, eps );
+
+	if ( avg ) //if pass checkval pass the average value as data
+		tree.insert( x1, y1, avg );
+
+	else //if fails the checkval 
+	{
+		subdiv( tree, image, x1, x2 / 2, y1, y2 / 2, eps ); //tl
+		subdiv( tree, image, x2 / 2, x2, y1, y2 / 2, eps ); //tr
+		subdiv( tree, image, x1, x2 / 2, y2 / 2, y2, eps ); //bl
+		subdiv( tree, image, x2 / 2, x2, y2, y2, eps ); //br
+	}
 }
 
 /**************************************************************************//**
@@ -269,99 +345,6 @@ void onkeypress( const unsigned char key, const int x, const int y )
 	}
 }
 
-<<<<<<< HEAD
-
-/******************************************************************************
-@author Jeremy Gamet
-
-@par Description:
-Inserts an image into the quadtree.
-Note: This function calls on checkval().
-
-@param[in,out] tree - The structure being inserted into.
-@param[in] image - The image being inserted.
-@param[in] x1 - Top left x coord of area to be inserted.
-@param[in] x2 - Bottom right x coord of area to be inserted.
-@param[in] y1 - Top left y coord of area to be inserted.
-@param[in] y2 - Bottom right y coord of area to be inserted.
-@param[in] eps   - An epsilon value to determine deviation from
-				    a mean value in a range of pixel values.
-
-******************************************************************************/
-template<class datatype>
-void subdiv( quadtree<datatype> & tree, const datatype ** const image, 
-const size_t x1, const size_t x2, const size_t y1, const size_t y2, 
-const datatype & eps )
-{
-	datatype avg = checkval(image, x1, x2, y1, y2, eps);
-
-	if ( avg ) //if pass checkval pass the average value as data
-	{
-		tree.insert(x1,y1,avg);
-		return;
-	}
-
-	else //if fails the checkval 
-	{
-		subdiv(tree, image, x1, x2/2, y1, y2/2, eps); //tl
-		subdiv(tree, image, x2/2, x2, y1, y2/2, eps); //tr
-		subdiv(tree, image, x1, x2/2, y2/2, y2, eps); //bl
-		subdiv(tree, image, x2/2, x2, y2, y2, eps); //br
-	}
-}
-
-/******************************************************************************
-@author Jeremy Gamet
-
-@par Description:
-Tests a range of values for deviation from a calculated mean. 
-Note: This function is called by subdiv().
-
-@param[in] image - 2D matrix containing pixel values to be checked.
-@param[in] x1 - Top left x coord of area to be checked.
-@param[in] x2 - Bottom right x coord of area to be checked.
-@param[in] y1 - Top left y coord of area to be checked.
-@param[in] y2 - Bottom right y coord of area to be checked.
-@param[in] eps   - An epsilon value to determine deviation from
-				    a mean value in a range of pixel values.
-
-******************************************************************************/
-template<class datatype>
-datatype checkval(const datatype ** const image, 
-const size_t x1, const size_t x2, const size_t y1,
-const size_t y2, const datatype & eps)
-{
-	size_t i, j, height, width = 0;
-	datatype curr, sum, min, max, avg = 0;
-	height = y2-y1;
-	width = x2-x1;
-
-	for ( i = x1; i < x2; ++i )
-	{
-		for ( j = y1; j < y2; ++j )
-		{
-			curr = image[i][j];
-			sum += curr;
-			if ( max < curr )
-				max = curr;
-			if ( min > curr )
-				min = curr;
-			if ( i == height - 1 && j == width - 1 )
-				avg = sum / ( height * width );
-			if (max-min > 0 && max-min > 2 * eps) //worst case reached
-				return 0;
-		}
-	}
-
-	if (max-min < 2*eps)
-		return avg;
-	else 
-		return 0;
-}
-
-
-/******************************************************************************
-=======
 void test()
 {
 	quadtree<int> test( 500, 500 );
@@ -389,7 +372,6 @@ void test()
 }
 
 /**************************************************************************//**
->>>>>>> origin/master
 @author John Colton
 
 @par Description:
@@ -398,21 +380,7 @@ functions are called here.
 ******************************************************************************/
 int main( int argc, char * argv[] )
 {
-<<<<<<< HEAD
-	QUAD_IMAGE.insert( 0, 0, 0 );
-	QUAD_IMAGE.insert( 0, 0, 1 );
-	QUAD_IMAGE.insert( 0, 1, 1 );
-	QUAD_IMAGE.insert( 1, 0, 1 );
-	QUAD_IMAGE.insert( 1, 1, 1 );
-
-	QUAD_IMAGE.optimize();
-
-	std::cout << "quadtree size in bytes:       " << QUAD_IMAGE.size() << '\n'
-			  << "number of quads in the tree:  " << QUAD_IMAGE.numQuads() << '\n'
-			  << "number of points in the tree: " << QUAD_IMAGE.numPoints() << "\n\n";
-=======
 	test();
->>>>>>> origin/master
 
 	if ( argc < 2 || argc > 3 )
 	{
