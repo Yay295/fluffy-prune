@@ -1,6 +1,6 @@
 #ifndef QUADTREE_H
 #define QUADTREE_H
-//typedef long unsigned int size_t;
+
 
 /**************************************************************************//**
 @author Jeremy Gamet and John Colton
@@ -13,7 +13,7 @@ class quadtree
 {
 	private:
 
-	/**************************************************************************
+	/**********************************************************************//**
 	@author Jeremy Gamet and John Colton
 
 	@par Description:
@@ -23,17 +23,10 @@ class quadtree
 	{
 		point();
 		point( const size_t X, const size_t Y, const datatype & D );
-<<<<<<< HEAD
-
-		datatype getData() const;
-		bool contains( const size_t x, const size_t y ) const;
-
-=======
 
 		datatype getData( const size_t X, const size_t Y ) const;
 		bool contains( const size_t x, const size_t y ) const;
 
->>>>>>> origin/master
 		virtual size_t insert( const point * const P ) { return 0; }
 		virtual size_t insert( const size_t X, const size_t Y, const datatype & D ) { return 0; }
 		virtual size_t optimize( size_t & numQuads, size_t & numPoints ) { return 0; }
@@ -42,7 +35,7 @@ class quadtree
 		datatype data; // The data at this point.
 	};
 
-	/**************************************************************************
+	/**********************************************************************//**
 	@author Jeremy Gamet and John Colton
 
 	@par Description:
@@ -85,14 +78,9 @@ class quadtree
 	public:
 
 	quadtree( const size_t W, const size_t H );
-	quadtree( const quadtree<datatype> &obj );
 	~quadtree();
 	bool insert( const size_t X, const size_t Y, const datatype & D );
 	datatype getData( const size_t X, const size_t Y ) const;
-<<<<<<< HEAD
-=======
-	void subdiv( const datatype ** const image, const datatype & eps );
->>>>>>> origin/master
 	void optimize();
 	void clear();
 	size_t numQuads();
@@ -100,12 +88,8 @@ class quadtree
 	size_t size();
 };
 
-<<<<<<< HEAD
-/******************************************************************************
-=======
 
 /**************************************************************************//**
->>>>>>> origin/master
 @author John Colton
 
 @par Description:
@@ -157,24 +141,6 @@ bool quadtree<datatype>::point::contains( const size_t X, const size_t Y ) const
 	return ( x == X && y == Y );
 }
 
-/******************************************************************************
-@author John Colton
-
-@par Description:
-Tells whether a given point is at the same point as this point.
-
-@param[in] X - The x location of the point to check.
-@param[in] Y - The y location of the point to check.
-
-@returns true  - The point is at this point.
-@returns false - The point is not at this point.
-******************************************************************************/
-template<class datatype>
-bool quadtree<datatype>::point::contains( const size_t X, const size_t Y ) const
-{
-	return ( x == X && y == Y );
-}
-
 
 /**************************************************************************//**
 @author John Colton
@@ -191,23 +157,7 @@ template<class datatype>
 quadtree<datatype>::quad::quad( const size_t X, const size_t Y, const size_t W, const size_t H, const datatype & D )
 	: point( X, Y, D ), width( W ), height( H ) {}
 
-<<<<<<< HEAD
-/******************************************************************************
-@author Jeremy Gamet
-
-@par Description:
-The copy constructor for this quadtree class.
-******************************************************************************/
-template<class datatype>
-quadtree<datatype>::quadtree(const quadtree<datatype> &obj) 
-{
-	quadtree<datatype> * ptr = root;
-}
-
-/******************************************************************************
-=======
 /**************************************************************************//**
->>>>>>> origin/master
 @author John Colton
 
 @par Description:
@@ -280,39 +230,6 @@ datatype quadtree<datatype>::quad::getData( const size_t X, const size_t Y ) con
 }
 
 /**************************************************************************//**
-@author John Colton
-
-@par Description:
-Returns the data at a point.
-
-@param[in] X - The x location of the point to check.
-@param[in] Y - The y location of the point to check.
-
-@returns datatype - The data at this point.
-******************************************************************************/
-template<class datatype>
-datatype quadtree<datatype>::quad::getData( const size_t X, const size_t Y ) const
-{
-	// If the top left quadrant pointer is not a nullptr and it contains the
-	// point we are looking for, return the data at the point.
-	if ( tl != nullptr && tl->contains( X, Y ) )
-		return tl->getData( X, Y );
-
-	if ( tr != nullptr && tr->contains( X, Y ) )
-		return tr->getData( X, Y );
-
-	if ( bl != nullptr && bl->contains( X, Y ) )
-		return bl->getData( X, Y );
-
-	if ( br != nullptr && br->contains( X, Y ) )
-		return br->getData( X, Y );
-
-	// The point is not in any of the set quadrants of this quad, so it must
-	// have the same data as this quads default data.
-	return data;
-}
-
-/******************************************************************************
 @author John Colton
 
 @par Description:
@@ -493,11 +410,7 @@ size_t quadtree<datatype>::quad::insert( const size_t X, const size_t Y, const d
 	return 0;
 }
 
-<<<<<<< HEAD
-/******************************************************************************
-=======
 /**************************************************************************//**
->>>>>>> origin/master
 @author John Colton
 
 @par Description:
@@ -549,14 +462,6 @@ size_t quadtree<datatype>::quad::optimize( size_t & numQuads, size_t & numPoints
 	}
 
 
-<<<<<<< HEAD
-	// The five possible unique items defined by this quads data, and the data
-	// in each of this quads' quadrants.
-	datatype * items[5] = { &data };
-	// The number of items in this quadrant that are the same as their
-	// respective data in 'items'.
-	size_t iCount[5] = { ( width * height ) - matchCount.tl - matchCount.tr - matchCount.bl - matchCount.br };
-=======
 	// The number of points in this quadrant whose data is defined by the
 	// default data of the quad.
 	const size_t numDefault = ( width * height ) - matchCount.tl - matchCount.tr - matchCount.bl - matchCount.br;
@@ -572,7 +477,6 @@ size_t quadtree<datatype>::quad::optimize( size_t & numQuads, size_t & numPoints
 	// data of this quad, set the default data of this quad as the first unique
 	// item in the unique items list.
 	if ( numDefault ) items[0] = &data;
->>>>>>> origin/master
 
 	// If the top left quadrant pointer is not a nullptr, check if its data is
 	// in the unique data list ('items'). If it is, add the number of items in
@@ -679,30 +583,18 @@ size_t quadtree<datatype>::quad::optimize( size_t & numQuads, size_t & numPoints
 
 
 	// The item with the greatest similar items in this quadrant.
-<<<<<<< HEAD
-	datatype * best = &data;
-	// The number of items similar to 'best'.
-	size_t max = iCount[0];
-
-	// Determin which item in this quadrant has the most similar items.
-=======
 	datatype best = *items[0];
 	// The number of items similar to 'best'.
 	size_t max = iCount[0];
 
 	// Determine which item in this quadrant has the most similar items.
->>>>>>> origin/master
 	for ( size_t item = 1; item < 5; ++item )
 	{
 		if ( iCount[item] > max )
 		{
 			max = iCount[item];
 
-<<<<<<< HEAD
-			best = items[item];
-=======
 			best = *items[item];
->>>>>>> origin/master
 		}
 	}
 
@@ -710,17 +602,10 @@ size_t quadtree<datatype>::quad::optimize( size_t & numQuads, size_t & numPoints
 	// If the best choice for the default item is not the default item, make it
 	// the default item and adjust the sub-quadrants appropriately (not in that
 	// order).
-<<<<<<< HEAD
-	if ( *best != data )
-	{
-		// If this quad cannot be subdivided any further.
-		const bool isSmallest = ( width <= 2 && height <= 2 );
-=======
 	if ( best != data )
 	{
 		// If the subquadrants of this quad cannot be subdivided any further.
 		const bool isSmallest = ( width < 5 && height < 5 );
->>>>>>> origin/master
 
 
 		// If the top left quadrant pointer is a nullptr or a point struct.
@@ -731,11 +616,7 @@ size_t quadtree<datatype>::quad::optimize( size_t & numQuads, size_t & numPoints
 			{
 				// If there is a point in the top left quadrant and its data is
 				// the same as the new default data for this quad.
-<<<<<<< HEAD
-				if ( tl != nullptr && tl->data == *best )
-=======
 				if ( tl != nullptr && tl->data == best )
->>>>>>> origin/master
 				{
 					// Delete the point.
 					delete tl;
@@ -754,19 +635,10 @@ size_t quadtree<datatype>::quad::optimize( size_t & numQuads, size_t & numPoints
 				// Store the top left quadrant pointer in a temp pointer.
 				const point * const temp = tl;
 
-<<<<<<< HEAD
-				// Create a new quad for the top left quadrant.
-				tl = new quad( x, y, width / 2, height / 2 );
-
-				// Give that quadrant the data that was previously the default
-				// data of this quad.
-				tl->data = data;
-=======
 				// Create a new quad for the top left quadrant and give that
 				// quadrant the data that was previously the default data of
 				// this quad.
 				tl = new quad( x, y, width / 2, height / 2, data );
->>>>>>> origin/master
 
 				// Insert the point previously pointed to by the top left
 				// quadrant pointer of this quad into the new quad. Nothing
@@ -784,11 +656,7 @@ size_t quadtree<datatype>::quad::optimize( size_t & numQuads, size_t & numPoints
 
 		// If the data in the quad struct pointed to by the top left quadrant
 		// pointer is the same as the new default data of this quad.
-<<<<<<< HEAD
-		else if ( tl->data == *best )
-=======
 		else if ( tl->data == best )
->>>>>>> origin/master
 		{
 			// Create a temp quad pointer so the quads' sub-quadrants can be
 			// accessed. They can't be accesed without a cast because the
@@ -850,11 +718,7 @@ size_t quadtree<datatype>::quad::optimize( size_t & numQuads, size_t & numPoints
 		{
 			if ( isSmallest )
 			{
-<<<<<<< HEAD
-				if ( tr != nullptr && tr->data == *best )
-=======
 				if ( tr != nullptr && tr->data == best )
->>>>>>> origin/master
 				{
 					delete tr;
 					tr = nullptr;
@@ -865,23 +729,14 @@ size_t quadtree<datatype>::quad::optimize( size_t & numQuads, size_t & numPoints
 			else
 			{
 				const point * const temp = tr;
-<<<<<<< HEAD
-				tr = new quad( x, y, width / 2, height / 2 );
-				tr->data = data;
-=======
 				tr = new quad( x, y, width / 2, height / 2, data );
->>>>>>> origin/master
 				tr->insert( temp );
 				delete temp;
 				++numQuads;
 			}
 		}
 
-<<<<<<< HEAD
-		else if ( tr->data == *best )
-=======
 		else if ( tr->data == best )
->>>>>>> origin/master
 		{
 			const quad * const temp = static_cast<quad*>( tr );
 
@@ -922,11 +777,7 @@ size_t quadtree<datatype>::quad::optimize( size_t & numQuads, size_t & numPoints
 		{
 			if ( isSmallest )
 			{
-<<<<<<< HEAD
-				if ( bl != nullptr && bl->data == *best )
-=======
 				if ( bl != nullptr && bl->data == best )
->>>>>>> origin/master
 				{
 					delete bl;
 					bl = nullptr;
@@ -937,23 +788,14 @@ size_t quadtree<datatype>::quad::optimize( size_t & numQuads, size_t & numPoints
 			else
 			{
 				const point * const temp = bl;
-<<<<<<< HEAD
-				bl = new quad( x, y, width / 2, height / 2 );
-				bl->data = data;
-=======
 				bl = new quad( x, y, width / 2, height / 2, data );
->>>>>>> origin/master
 				bl->insert( temp );
 				delete temp;
 				++numQuads;
 			}
 		}
 
-<<<<<<< HEAD
-		else if ( bl->data == *best )
-=======
 		else if ( bl->data == best )
->>>>>>> origin/master
 		{
 			const quad * const temp = static_cast<quad*>( bl );
 
@@ -994,11 +836,7 @@ size_t quadtree<datatype>::quad::optimize( size_t & numQuads, size_t & numPoints
 		{
 			if ( isSmallest )
 			{
-<<<<<<< HEAD
-				if ( br != nullptr && br->data == *best )
-=======
 				if ( br != nullptr && br->data == best )
->>>>>>> origin/master
 				{
 					delete br;
 					br = nullptr;
@@ -1009,23 +847,14 @@ size_t quadtree<datatype>::quad::optimize( size_t & numQuads, size_t & numPoints
 			else
 			{
 				const point * const temp = br;
-<<<<<<< HEAD
-				br = new quad( x, y, width / 2, height / 2 );
-				br->data = data;
-=======
 				br = new quad( x, y, width / 2, height / 2, data );
->>>>>>> origin/master
 				br->insert( temp );
 				delete temp;
 				++numQuads;
 			}
 		}
 
-<<<<<<< HEAD
-		else if ( br->data == *best )
-=======
 		else if ( br->data == best )
->>>>>>> origin/master
 		{
 			const quad * const temp = static_cast<quad*>( br );
 
@@ -1064,11 +893,7 @@ size_t quadtree<datatype>::quad::optimize( size_t & numQuads, size_t & numPoints
 
 
 		// Replace the current default with the new default.
-<<<<<<< HEAD
-		data = *best;
-=======
 		data = best;
->>>>>>> origin/master
 	}
 
 
@@ -1150,12 +975,6 @@ bool quadtree<datatype>::insert( const size_t X, const size_t Y, const datatype 
 	else return false;
 }
 
-<<<<<<< HEAD
-/******************************************************************************
-<<<<<<< HEAD
-=======
-@author John Colton
-=======
 /**************************************************************************//**
 @author John Colton
 
@@ -1175,41 +994,6 @@ datatype quadtree<datatype>::getData( const size_t X, const size_t Y ) const
 }
 
 /**************************************************************************//**
-@author Jeremy Gamet
->>>>>>> origin/master
-
-@par Description:
-Returns the data at a point. Will fail if the point to get it outside the range
-of this quadtree or if this quadtree is empty.
-
-@param[in] X - The x location of the point to check.
-@param[in] Y - The y location of the point to check.
-
-@returns datatype - The data at this point.
-******************************************************************************/
-template<class datatype>
-datatype quadtree<datatype>::getData( const size_t X, const size_t Y ) const
-{
-	return root->getData( X, Y );
-}
-
-/******************************************************************************
-@author John Colton
-
-@par Description:
-This function attempts to optimize the quadtree storage.
-******************************************************************************/
-template <class datatype>
-void quadtree<datatype>::optimize()
-{
-	if ( root != nullptr ) root->optimize( count.quads, count.points );
-}
-
-<<<<<<< HEAD
-/******************************************************************************
->>>>>>> origin/master
-=======
-/**************************************************************************//**
 @author John Colton
 
 @par Description:
@@ -1222,7 +1006,6 @@ void quadtree<datatype>::optimize()
 }
 
 /**************************************************************************//**
->>>>>>> origin/master
 @author Jeremy Gamet and John Colton
 
 @par Description:
