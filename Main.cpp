@@ -61,11 +61,11 @@
 
 #ifdef __APPLE__
 #include <GLUT/glut.h>
-typedef unsigned int size_t;
+
 #else
 #include <GL/freeglut.h>
 #endif
-
+#include <cstddef>
 #include <iostream>
 #include "loadBMP.cpp"
 #include "quadtree.cpp"
@@ -165,7 +165,7 @@ datatype checkval( const datatype ** const image,
 	if ( max - min < 2 * eps )
 		return avg;
 	else
-		return 0;
+		return (datatype) -1;
 }
 
 /**************************************************************************//**
@@ -191,7 +191,7 @@ void subdiv( quadtree<datatype> & tree, const datatype ** const image,
 {
 	const datatype avg = checkval( image, x1, x2, y1, y2, eps );
 
-	if ( avg ) //if pass checkval pass the average value as data
+	if ( avg != (datatype) -1 ) //if pass checkval pass the average value as data
 		tree.insert( x1, y1, avg );
 
 	else //if fails the checkval 

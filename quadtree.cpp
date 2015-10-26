@@ -1,6 +1,6 @@
 #ifndef QUADTREE_H
 #define QUADTREE_H
-
+#include <cstddef>
 
 /**************************************************************************//**
 @author Jeremy Gamet and John Colton
@@ -190,7 +190,7 @@ datatype quadtree<datatype>::quad::getData( const size_t X, const size_t Y ) con
 
 	// If the top left quadrant pointer points to a quad struct that contains
 	// the point we are looking for, return the data at the point.
-	if ( temp = dynamic_cast<quad*>( tl ) )
+	if ( temp == dynamic_cast<quad*>( tl ) )
 	{
 		if ( temp->contains( X, Y ) )
 			return temp->getData( X, Y );
@@ -200,7 +200,7 @@ datatype quadtree<datatype>::quad::getData( const size_t X, const size_t Y ) con
 	// at the point we are looking for, return its data.
 	else if ( tl != nullptr && tl->contains( X, Y ) ) return tl->data;
 
-	if ( temp = dynamic_cast<quad*>( tr ) )
+	if ( temp == dynamic_cast<quad*>( tr ) )
 	{
 		if ( temp->contains( X, Y ) )
 			return temp->getData( X, Y );
@@ -208,7 +208,7 @@ datatype quadtree<datatype>::quad::getData( const size_t X, const size_t Y ) con
 
 	else if ( tr != nullptr && tr->contains( X, Y ) ) return tr->data;
 
-	if ( temp = dynamic_cast<quad*>( bl ) )
+	if ( temp == dynamic_cast<quad*>( bl ) )
 	{
 		if ( temp->contains( X, Y ) )
 			return temp->getData( X, Y );
@@ -216,7 +216,7 @@ datatype quadtree<datatype>::quad::getData( const size_t X, const size_t Y ) con
 
 	else if ( bl != nullptr && bl->contains( X, Y ) ) return bl->data;
 
-	if ( temp = dynamic_cast<quad*>( br ) )
+	if ( temp == dynamic_cast<quad*>( br ) )
 	{
 		if ( temp->contains( X, Y ) )
 			return temp->getData( X, Y );

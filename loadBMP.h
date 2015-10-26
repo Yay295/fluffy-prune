@@ -12,7 +12,7 @@ RefRef: Based on code from RgbImage.cc (Buss, 3-D Computer Graphics, 2003).
 
 #ifndef LOAD_BMP_H
 #define LOAD_BMP_H
-
+#include <cstddef>
 #include <iostream>
 #include <fstream>
 
