@@ -70,7 +70,8 @@
 
 					   Added getDimensions() to the quadtree class and its
 					   member structs (quad and point). Wrote drawLines().
-					   Exhumed checkval() and subdiv().
+					   Exhumed checkval() and subdiv(). Made + and - keys add
+					   and subtract 5 to/from the quality level.
 	@endverbatim
 ******************************************************************************/
 
@@ -99,7 +100,7 @@ struct pixel
 
 
 bool DRAW_LINES = false;
-double QUALITY = 1;
+double QUALITY = 100;
 size_t IMAGE_WIDTH, IMAGE_HEIGHT;
 char * ORIGINAL_IMAGE, * COMPRESSED_IMAGE;
 std::vector<size_t> DIMENSIONS;
@@ -150,10 +151,8 @@ datatype checkval( const datatype ** const image,
 	const size_t x1, const size_t x2, const size_t y1,
 	const size_t y2, const datatype & eps )
 {
-	size_t i, j, height, width = 0;
+	size_t i, j, y2 - y1, width = x2 - x1;
 	datatype curr, sum, min, max, avg = 0;
-	height = y2 - y1;
-	width = x2 - x1;
 
 	for ( i = x1; i < x2; ++i )
 	{
@@ -167,7 +166,7 @@ datatype checkval( const datatype ** const image,
 				min = curr;
 			if ( i == height - 1 && j == width - 1 )
 				avg = sum / ( height * width );
-			if ( max - min > 0 && max - min > 2 * eps ) //worst case reached
+			if ( max - min > 0 && max - min > 2 * eps ) // worst case reached
 				return 0;
 		}
 	}
@@ -206,10 +205,10 @@ void subdiv( quadtree<datatype> & tree, const datatype ** const image,
 
 	else // if fails the checkval 
 	{
-		subdiv( tree, image, x1, x2 / 2, y1, y2 / 2, eps ); //tl
-		subdiv( tree, image, x2 / 2, x2, y1, y2 / 2, eps ); //tr
-		subdiv( tree, image, x1, x2 / 2, y2 / 2, y2, eps ); //bl
-		subdiv( tree, image, x2 / 2, x2, y2, y2, eps );     //br
+		subdiv( tree, image, x1, x2 / 2, y1, y2 / 2, eps ); // tl
+		subdiv( tree, image, x2 / 2, x2, y1, y2 / 2, eps ); // tr
+		subdiv( tree, image, x1, x2 / 2, y2 / 2, y2, eps ); // bl
+		subdiv( tree, image, x2 / 2, x2, y2 / 2, y2, eps ); // br
 	}
 }
 
@@ -228,7 +227,7 @@ QUAD_IMAGE into COMPRESSED_IMAGE for easier glut display.
 *****************************************************************************/
 bool loadImage( const char * const filename )
 {
-	if ( loadBMP( filename, IMAGE_HEIGHT, IMAGE_WIDTH, ORIGINAL_IMAGE ) )
+	if ( filename == nullptr || loadBMP( filename, IMAGE_HEIGHT, IMAGE_WIDTH, ORIGINAL_IMAGE ) )
 	{
 		quadtree<pixel> quadimage( IMAGE_WIDTH, IMAGE_HEIGHT );
 		
@@ -245,10 +244,12 @@ bool loadImage( const char * const filename )
 					                 char( ORIGINAL_IMAGE[3*IMAGE_WIDTH*y+3*x+1] * QUALITY / 100 + 0.5 ) * ( 100 / QUALITY ),
 					                 char( ORIGINAL_IMAGE[3*IMAGE_WIDTH*y+3*x+2] * QUALITY / 100 + 0.5 ) * ( 100 / QUALITY ) };
 
-				quadimage.insert( x, y, temp );
+				quadimage.insert( x, y, test );
 			}
 		}
 
+
+		std::cout << "Quality Setting: " << QUALITY << "\n\n";
 
 		std::cout << "Size of BMP image: "
 				  << 3 * IMAGE_WIDTH * IMAGE_HEIGHT * sizeof( ORIGINAL_IMAGE ) << "\n\n";
@@ -280,6 +281,7 @@ bool loadImage( const char * const filename )
 		}
 
 
+		DIMENSIONS.clear();
 		quadimage.getDimensions( DIMENSIONS );
 
 
@@ -362,8 +364,6 @@ void drawLines()
 		glVertex2d( x + width, y + height );
 		glEnd();
 	}
-
-	glFinish();
 }
 
 /**************************************************************************//**
@@ -408,6 +408,22 @@ void onkeypress( const unsigned char key, const int x, const int y )
 		DRAW_LINES = !DRAW_LINES;
 
 		// Redraw screen.
+		display();
+	}
+
+	else if ( key == '+' || key == '-' )
+	{
+		QUALITY /= 20;
+		QUALITY *= 20;
+
+		if ( key == '+' ) QUALITY += 5;
+		else if ( key == '-' ) QUALITY -= 5;
+
+		if ( QUALITY < 0 ) QUALITY = 0;
+		if ( QUALITY > 100 ) QUALITY = 100;
+
+		loadImage( nullptr );
+
 		display();
 	}
 }
