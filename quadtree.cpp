@@ -2,6 +2,9 @@
 #define QUADTREE_H
 
 
+#include <vector>
+
+
 /**************************************************************************//**
 @author Jeremy Gamet and John Colton
 
@@ -25,6 +28,7 @@ class quadtree
 		point( const size_t X, const size_t Y, const datatype & D );
 
 		datatype getData( const size_t X, const size_t Y ) const;
+		void getDimensions( std::vector<size_t> & vec ) const;
 		bool contains( const size_t x, const size_t y ) const;
 
 		virtual size_t insert( const point * const P ) { return 0; }
@@ -50,6 +54,7 @@ class quadtree
 		~quad();
 
 		datatype getData( const size_t X, const size_t Y ) const;
+		void getDimensions( std::vector<size_t> & vec ) const;
 		bool contains( const size_t x, const size_t y ) const;
 
 		size_t insert( const point * const P );
@@ -81,6 +86,7 @@ class quadtree
 	~quadtree();
 	bool insert( const size_t X, const size_t Y, const datatype & D );
 	datatype getData( const size_t X, const size_t Y ) const;
+	void getDimensions( std::vector<size_t> & vec ) const;
 	void optimize();
 	void clear();
 	size_t numQuads();
@@ -122,6 +128,25 @@ This point struct function returns the data at this point.
 ******************************************************************************/
 template<class datatype>
 datatype quadtree<datatype>::point::getData( const size_t X, const size_t Y ) const { return data; }
+
+/**************************************************************************//**
+@author John Colton
+
+@par Description:
+This function stores the dimensions of this point in a std::vector. They are
+merely added to the end of the vector in the order: x, y, width, height. For
+a point, width and height are both 0.
+
+@param[in,out] vec - A reference to a vector to store the dimensions in.
+******************************************************************************/
+template<class datatype>
+void quadtree<datatype>::point::getDimensions( std::vector<size_t> & vec ) const
+{
+	vec.push_back( x );
+	vec.push_back( y );
+	vec.push_back( 0 );
+	vec.push_back( 0 );
+}
 
 /**************************************************************************//**
 @author John Colton
@@ -227,6 +252,42 @@ datatype quadtree<datatype>::quad::getData( const size_t X, const size_t Y ) con
 	// The point is not in any of the set quadrants of this quad, so it must
 	// have the same data as this quads default data.
 	return data;
+}
+
+/**************************************************************************//**
+@author John Colton
+
+@par Description:
+This function stores the dimensions of this quad and all of its sub-quadrants
+in a std::vector. They are merely added to the end of the vector in the order:
+x, y, width, height. For a point, width and height are both 0.
+
+@param[in,out] vec - A reference to a vector to store the dimensions in.
+******************************************************************************/
+template<class datatype>
+void quadtree<datatype>::quad::getDimensions( std::vector<size_t> & vec ) const
+{
+	// Add this quads' data to the vector.
+	vec.push_back( x );
+	vec.push_back( y );
+	vec.push_back( width - 1 );
+	vec.push_back( height - 1 );
+
+	quad * temp;
+
+	// If the top left quadrant pointer points to a quad struct.
+	if ( temp = dynamic_cast<quad*>( tl ) ) temp->getDimensions( vec );
+	// Else if the top left quadrant pointer points to a point struct.
+	else if ( tl != nullptr ) tl->getDimensions( vec );
+
+	if ( temp = dynamic_cast<quad*>( tr ) ) temp->getDimensions( vec );
+	else if ( tr != nullptr ) tr->getDimensions( vec );
+
+	if ( temp = dynamic_cast<quad*>( bl ) ) temp->getDimensions( vec );
+	else if ( bl != nullptr ) bl->getDimensions( vec );
+
+	if ( temp = dynamic_cast<quad*>( br ) ) temp->getDimensions( vec );
+	else if ( br != nullptr ) br->getDimensions( vec );
 }
 
 /**************************************************************************//**
@@ -902,7 +963,6 @@ size_t quadtree<datatype>::quad::optimize( size_t & numQuads, size_t & numPoints
 }
 
 
-
 /**************************************************************************//**
 @author Jeremy Gamet and John Colton
 
@@ -991,6 +1051,22 @@ template<class datatype>
 datatype quadtree<datatype>::getData( const size_t X, const size_t Y ) const
 {
 	return root->getData( X, Y );
+}
+
+/**************************************************************************//**
+@author John Colton
+
+@par Description:
+This function stores the dimensions of every quad and point in this quadtree in
+a std::vector. They are merely added to the end of the vector in the order: x,
+y, width, height. For a point, width and height are both 0.
+
+@param[in,out] vec - A reference to a vector to store the dimensions in.
+******************************************************************************/
+template<class datatype>
+void quadtree<datatype>::getDimensions( std::vector<size_t> & vec ) const
+{
+	if ( root != nullptr ) root->getDimensions( vec );
 }
 
 /**************************************************************************//**
