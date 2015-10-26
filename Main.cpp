@@ -29,15 +29,16 @@
 
 @section todo_bugs_changelog Todo, Bugs, and Changelog
 
-@todo Finish Program
+@todo Fix Bug(s)
 
-@bug Only one third of the compressed image is shown.
-@bug There are some pure black/white pixels in the compressed image.
+@bug quadtree::optimize() is wrong, somewhere.
+@bug checkval() and subdiv() have errors.
 
 @par Changelog:
 	@verbatim
 	Date               Change
 	----------------   --------------------------------------------------------
+	Prehistory         Created main.cpp and quadtree.cpp.
 	October 21, 2015   Added lots of documentation.
 	October 22, 2015   Added optimize() functions to quadtree and quad.
 	                   Improved quad::insert(point*) to handle nullptr's.
@@ -56,17 +57,26 @@
 					   Added code to load a BMP file and loadImage() function.
 					   Fixed Doxygen tags. Finished drawImages(). Worked on
 					   loadImage().
+	October 26, 2015   Removed Apple specific code and functions checkval() and
+	                   subdiv(). Moved QUAD_IMAGE global quatree pointer to
+					   loadImage() as a non-pointer quadtree. Fixed bugs
+					   causing only 1/3 of the compressed image being shown and
+					   bug causing some pure black/white pixels in the
+					   compressed image. Found that there is a bug in
+					   quadtree::optimize(), though I don't yet know where.
+
+					   Added code to get the quality value from the command
+					   line if it is set and make sure it is within limits.
+
+					   Added getDimensions() to the quadtree class and its
+					   member structs (quad and point). Wrote drawLines().
+					   Exhumed checkval() and subdiv().
 	@endverbatim
 ******************************************************************************/
 
-#ifdef __APPLE__
-#include <GLUT/glut.h>
-typedef unsigned int size_t;
-#else
 #include <GL/freeglut.h>
-#endif
-
 #include <iostream>
+#include <vector>
 #include "loadBMP.cpp"
 #include "quadtree.cpp"
 
@@ -89,10 +99,10 @@ struct pixel
 
 
 bool DRAW_LINES = false;
-double QUALITY = 100;
-quadtree<pixel> * QUAD_IMAGE;
-char * ORIGINAL_IMAGE, * COMPRESSED_IMAGE;
+double QUALITY = 1;
 size_t IMAGE_WIDTH, IMAGE_HEIGHT;
+char * ORIGINAL_IMAGE, * COMPRESSED_IMAGE;
+std::vector<size_t> DIMENSIONS;
 
 
 /**************************************************************************//**
@@ -165,7 +175,7 @@ datatype checkval( const datatype ** const image,
 	if ( max - min < 2 * eps )
 		return avg;
 	else
-		return 0;
+		return (datatype) -1;
 }
 
 /**************************************************************************//**
@@ -191,15 +201,15 @@ void subdiv( quadtree<datatype> & tree, const datatype ** const image,
 {
 	const datatype avg = checkval( image, x1, x2, y1, y2, eps );
 
-	if ( avg ) //if pass checkval pass the average value as data
+	if ( avg != (datatype) -1 ) // if pass checkval pass the average value as data
 		tree.insert( x1, y1, avg );
 
-	else //if fails the checkval 
+	else // if fails the checkval 
 	{
 		subdiv( tree, image, x1, x2 / 2, y1, y2 / 2, eps ); //tl
 		subdiv( tree, image, x2 / 2, x2, y1, y2 / 2, eps ); //tr
 		subdiv( tree, image, x1, x2 / 2, y2 / 2, y2, eps ); //bl
-		subdiv( tree, image, x2 / 2, x2, y2, y2, eps ); //br
+		subdiv( tree, image, x2 / 2, x2, y2, y2, eps );     //br
 	}
 }
 
@@ -218,19 +228,24 @@ QUAD_IMAGE into COMPRESSED_IMAGE for easier glut display.
 *****************************************************************************/
 bool loadImage( const char * const filename )
 {
-	if ( loadBMP( filename, IMAGE_WIDTH, IMAGE_HEIGHT, ORIGINAL_IMAGE ) )
+	if ( loadBMP( filename, IMAGE_HEIGHT, IMAGE_WIDTH, ORIGINAL_IMAGE ) )
 	{
-		QUAD_IMAGE = new quadtree<pixel>( IMAGE_WIDTH, IMAGE_HEIGHT );
-
+		quadtree<pixel> quadimage( IMAGE_WIDTH, IMAGE_HEIGHT );
+		
 		for ( size_t y = 0; y < IMAGE_HEIGHT; ++y )
 		{
 			for ( size_t x = 0; x < IMAGE_WIDTH; ++x )
 			{
-				const pixel temp = { ORIGINAL_IMAGE[IMAGE_WIDTH*y+3*x],
-					                 ORIGINAL_IMAGE[IMAGE_WIDTH*y+3*x+1],
-					                 ORIGINAL_IMAGE[IMAGE_WIDTH*y+3*x+2] };
+				const pixel temp = { ORIGINAL_IMAGE[3*IMAGE_WIDTH*y+3*x],
+					                 ORIGINAL_IMAGE[3*IMAGE_WIDTH*y+3*x+1],
+					                 ORIGINAL_IMAGE[3*IMAGE_WIDTH*y+3*x+2] };
 
-				QUAD_IMAGE->insert( x, y, temp );
+				// Posterized
+				const pixel test = { char( ORIGINAL_IMAGE[3*IMAGE_WIDTH*y+3*x] * QUALITY / 100 + 0.5 ) * ( 100 / QUALITY ),
+					                 char( ORIGINAL_IMAGE[3*IMAGE_WIDTH*y+3*x+1] * QUALITY / 100 + 0.5 ) * ( 100 / QUALITY ),
+					                 char( ORIGINAL_IMAGE[3*IMAGE_WIDTH*y+3*x+2] * QUALITY / 100 + 0.5 ) * ( 100 / QUALITY ) };
+
+				quadimage.insert( x, y, temp );
 			}
 		}
 
@@ -239,16 +254,16 @@ bool loadImage( const char * const filename )
 				  << 3 * IMAGE_WIDTH * IMAGE_HEIGHT * sizeof( ORIGINAL_IMAGE ) << "\n\n";
 
 		std::cout << "Before optimize() is called\n---------------------------------------\n"
-			<< "quadtree size in bytes:       " << QUAD_IMAGE->size() << '\n'
-			<< "number of quads in the tree:  " << QUAD_IMAGE->numQuads() << '\n'
-			<< "number of points in the tree: " << QUAD_IMAGE->numPoints() << "\n\n";
+			<< "quadtree size in bytes:       " << quadimage.size() << '\n'
+			<< "number of quads in the tree:  " << quadimage.numQuads() << '\n'
+			<< "number of points in the tree: " << quadimage.numPoints() << "\n\n";
 
-		QUAD_IMAGE->optimize();
+		quadimage.optimize();
 
 		std::cout << "After optimize() is called\n--------------------------------------\n"
-			<< "quadtree size in bytes:       " << QUAD_IMAGE->size() << '\n'
-			<< "number of quads in the tree:  " << QUAD_IMAGE->numQuads() << '\n'
-			<< "number of points in the tree: " << QUAD_IMAGE->numPoints() << "\n\n";
+			<< "quadtree size in bytes:       " << quadimage.size() << '\n'
+			<< "number of quads in the tree:  " << quadimage.numQuads() << '\n'
+			<< "number of points in the tree: " << quadimage.numPoints() << "\n\n";
 
 
 		COMPRESSED_IMAGE = new char[IMAGE_WIDTH*IMAGE_HEIGHT*3];
@@ -257,12 +272,29 @@ bool loadImage( const char * const filename )
 		{
 			for ( size_t x = 0; x < IMAGE_WIDTH; ++x )
 			{
-				const pixel temp = QUAD_IMAGE->getData( x, y );
-				COMPRESSED_IMAGE[IMAGE_WIDTH*y+3*x] = temp.r;
-				COMPRESSED_IMAGE[IMAGE_WIDTH*y+3*x+1] = temp.g;
-				COMPRESSED_IMAGE[IMAGE_WIDTH*y+3*x+2] = temp.b;
+				const pixel temp = quadimage.getData( x, y );
+				COMPRESSED_IMAGE[3*IMAGE_WIDTH*y+3*x] = temp.r;
+				COMPRESSED_IMAGE[3*IMAGE_WIDTH*y+3*x+1] = temp.g;
+				COMPRESSED_IMAGE[3*IMAGE_WIDTH*y+3*x+2] = temp.b;
 			}
 		}
+
+
+		quadimage.getDimensions( DIMENSIONS );
+
+
+		/*/ Print Incorrect Pixels
+		for ( size_t i = 0; i < IMAGE_WIDTH * IMAGE_HEIGHT * 3; ++i )
+		{
+			if ( ORIGINAL_IMAGE[i] != COMPRESSED_IMAGE[i] )
+			{
+				COMPRESSED_IMAGE[i] = 0;
+				//std::cout << i / ( 512 * 3 ) << ' ' << ( i % 512 ) / 3 << " - " << int( ORIGINAL_IMAGE[i] ) << ' ' << int( COMPRESSED_IMAGE[i] ) << '\n';
+				//break;
+			}
+
+			else COMPRESSED_IMAGE[i] = 255;
+		}//*/
 
 
 		return true;
@@ -289,7 +321,7 @@ void drawImages()
 }
 
 /**************************************************************************//**
-@author ???
+@author John Colton
 
 @par Description:
 This function draws lines on top of the quadtree compressed image around the
@@ -297,6 +329,41 @@ location of each block as stored in the quadtree.
 ******************************************************************************/
 void drawLines()
 {
+	const size_t size = DIMENSIONS.size();
+
+	for ( size_t i = 0; i < size; i += 4 )
+	{
+		const size_t x = DIMENSIONS[i] + IMAGE_WIDTH + 10,
+			         y = DIMENSIONS[i+1],
+			     width = DIMENSIONS[i+2],
+			    height = DIMENSIONS[i+3];
+
+		// Draw Top Border
+		glBegin( GL_LINES );
+		glVertex2d( x, y );
+		glVertex2d( x + width, y );
+		glEnd();
+
+		// Draw Bottom Border
+		glBegin( GL_LINES );
+		glVertex2d( x, y + height );
+		glVertex2d( x + width, y + height );
+		glEnd();
+
+		// Draw Left Border
+		glBegin( GL_LINES );
+		glVertex2d( x, y );
+		glVertex2d( x, y + height );
+		glEnd();
+
+		// Draw Right Border
+		glBegin( GL_LINES );
+		glVertex2d( x + width, y );
+		glVertex2d( x + width, y + height );
+		glEnd();
+	}
+
+	glFinish();
 }
 
 /**************************************************************************//**
@@ -380,8 +447,6 @@ functions are called here.
 ******************************************************************************/
 int main( int argc, char * argv[] )
 {
-	test();
-
 	if ( argc < 2 || argc > 3 )
 	{
 		printUsageInstructions();
@@ -389,6 +454,15 @@ int main( int argc, char * argv[] )
 		std::cin.ignore();
 
 		return 0;
+	}
+
+	if ( argc == 3 ) // If a quality value has been specified.
+	{
+		QUALITY = atof( argv[2] );
+
+		if ( QUALITY < 0.1 ) QUALITY = 0.1;
+
+		else if ( QUALITY > 100 ) QUALITY = 100;
 	}
 
 	if ( !loadImage( argv[1] ) ) return 0;
@@ -410,7 +484,6 @@ int main( int argc, char * argv[] )
 	glutKeyboardFunc( onkeypress );
 
 	glutMainLoop();
-	
-	delete[] QUAD_IMAGE;
+
 	delete[] COMPRESSED_IMAGE;
 }
