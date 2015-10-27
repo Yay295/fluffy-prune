@@ -24,15 +24,38 @@
 @section compile_section Compiling and Usage
 
 @par Compiling Instructions:
+	MSVC++:
+		1. Create a new program.
+		2. Add Main.cpp and quadtree.cpp to your source files.
+		3. Add loadBMP.h to your header files.
+		4. Compile
+	GCC:
+		1. Run the following command.
+		g++ -O2 -std=c++11 loadBMP.h quadtree.cpp Main.cpp -lglut -lGLU -lGL -lm -o quadtree
+		2. Hope it compiles.
 
 @par Usage:
+	<program name> <BMP image> [quality level]
+	Run the program with no arguments for a more detailed answer.
+
+	Keyboard Commands:
+	' ' - Overlay the quadtree divisions.
+	'+' - Increase the quality level by 5.
+	'-' - Decrease the quality level by 5.
+	'e' - Exit/Quit the program.
+	'E' - Exit/Quit the program.
+	'q' - Exit/Quit the program.
+	'Q' - Exit/Quit the program.
+	ESC - Exit/Quit the program.
 
 @section todo_bugs_changelog Todo, Bugs, and Changelog
 
+@todo Write better way to handle quality levels.
+@todo Make things run faster.
 @todo Fix Bug(s)
 
-@bug quadtree::optimize() is wrong, somewhere.
-@bug checkval() and subdiv() have errors.
+@bug quadtree::optimize() is wrong, somewhere (though very rarely it seems).
+@bug checkval() and subdiv() have errors, and are thus not used.
 
 @par Changelog:
 	@verbatim
@@ -71,7 +94,10 @@
 					   Added getDimensions() to the quadtree class and its
 					   member structs (quad and point). Wrote drawLines().
 					   Exhumed checkval() and subdiv(). Made + and - keys add
-					   and subtract 5 to/from the quality level.
+					   and subtract 5 to/from the quality level. Made q, Q, and
+					   ESC exit the program. Added more console output. Fixed a
+					   few small bugs. Made things a bit more efficient. Added
+					   Compiling Instructions and Usage to documentation above.
 	@endverbatim
 ******************************************************************************/
 
@@ -102,6 +128,7 @@ struct pixel
 bool DRAW_LINES = false;
 double QUALITY = 100;
 size_t IMAGE_WIDTH, IMAGE_HEIGHT;
+const char * FILENAME;
 char * ORIGINAL_IMAGE, * COMPRESSED_IMAGE;
 std::vector<size_t> DIMENSIONS;
 
@@ -123,10 +150,11 @@ void printUsageInstructions()
 		"is the image that will be used by the program.\n\n"
 
 		"Argument 2 ( optional ) :\n"
-		"The second argument must be a number (integer or real) between 0 and 100\n"
+		"The second argument must be a number (integer or real) between 0.1 and 100\n"
 		"specifying the quality factor used by the program. A value of 100 is lossless\n"
-		"quality, and a value of 0 will compress the image to a single color. If this\n"
-		"argument is not specified, it will be set to 100.\n\n"
+		"quality, and a value of 0.1 will compress the image to a single color. If this\n"
+		"argument is not specified, it will be set to 100. If a number is entered that\n"
+		"is outside this range, it will be clamped to fit.\n\n"
 		
 		"Press 'Enter' to exit the program.";
 }
@@ -229,7 +257,11 @@ bool loadImage( const char * const filename )
 {
 	if ( filename == nullptr || loadBMP( filename, IMAGE_HEIGHT, IMAGE_WIDTH, ORIGINAL_IMAGE ) )
 	{
+		if ( filename != nullptr ) FILENAME = filename;
+
 		quadtree<pixel> quadimage( IMAGE_WIDTH, IMAGE_HEIGHT );
+
+		const double percentage = QUALITY / 100;
 		
 		for ( size_t y = 0; y < IMAGE_HEIGHT; ++y )
 		{
@@ -240,31 +272,35 @@ bool loadImage( const char * const filename )
 					                 ORIGINAL_IMAGE[3*IMAGE_WIDTH*y+3*x+2] };
 
 				// Posterized
-				const pixel test = { char( ORIGINAL_IMAGE[3*IMAGE_WIDTH*y+3*x] * QUALITY / 100 + 0.5 ) * ( 100 / QUALITY ),
-					                 char( ORIGINAL_IMAGE[3*IMAGE_WIDTH*y+3*x+1] * QUALITY / 100 + 0.5 ) * ( 100 / QUALITY ),
-					                 char( ORIGINAL_IMAGE[3*IMAGE_WIDTH*y+3*x+2] * QUALITY / 100 + 0.5 ) * ( 100 / QUALITY ) };
+				const pixel test = { unsigned char( unsigned char( ORIGINAL_IMAGE[3*IMAGE_WIDTH*y+3*x] ) * percentage + 0.5 ) / percentage,
+					                 unsigned char( unsigned char( ORIGINAL_IMAGE[3*IMAGE_WIDTH*y+3*x+1] ) * percentage + 0.5 ) / percentage,
+					                 unsigned char( unsigned char( ORIGINAL_IMAGE[3*IMAGE_WIDTH*y+3*x+2] ) * percentage + 0.5 ) / percentage };
 
 				quadimage.insert( x, y, test );
 			}
 		}
 
 
-		std::cout << "Quality Setting: " << QUALITY << "\n\n";
+		const size_t BMPsize = 3 * IMAGE_WIDTH * IMAGE_HEIGHT * sizeof( ORIGINAL_IMAGE );
 
-		std::cout << "Size of BMP image: "
-				  << 3 * IMAGE_WIDTH * IMAGE_HEIGHT * sizeof( ORIGINAL_IMAGE ) << "\n\n";
+		std::cout << "================================================================================\n";
+		std::cout << "Image File: " << FILENAME << "\nWidth: " << IMAGE_WIDTH << "\nHeight: " << IMAGE_HEIGHT;
+		std::cout << "\n\nQuality Setting: " << QUALITY;
+		std::cout << "\n\nSize of BMP image: " << BMPsize << " bytes\n\n";
 
-		std::cout << "Before optimize() is called\n---------------------------------------\n"
-			<< "quadtree size in bytes:       " << quadimage.size() << '\n'
-			<< "number of quads in the tree:  " << quadimage.numQuads() << '\n'
-			<< "number of points in the tree: " << quadimage.numPoints() << "\n\n";
+		std::cout << "Before optimize() is called\n--------------------------------------"
+			<< "\nquadtree size in bytes:       " << quadimage.size()
+			<< "\nnumber of quads in the tree:  " << quadimage.numQuads()
+			<< "\nnumber of points in the tree: " << quadimage.numPoints();
 
 		quadimage.optimize();
 
-		std::cout << "After optimize() is called\n--------------------------------------\n"
-			<< "quadtree size in bytes:       " << quadimage.size() << '\n'
-			<< "number of quads in the tree:  " << quadimage.numQuads() << '\n'
-			<< "number of points in the tree: " << quadimage.numPoints() << "\n\n";
+		std::cout << "\n\nAfter optimize() is called\n--------------------------------------"
+			<< "\nquadtree size in bytes:       " << quadimage.size()
+			<< "\nnumber of quads in the tree:  " << quadimage.numQuads()
+			<< "\nnumber of points in the tree: " << quadimage.numPoints();
+
+		std::cout << "\n\nCompression Ratio: " << ( 100.00 * quadimage.size() ) / BMPsize << "%\n\n";
 
 
 		COMPRESSED_IMAGE = new char[IMAGE_WIDTH*IMAGE_HEIGHT*3];
@@ -335,21 +371,21 @@ void drawLines()
 
 	for ( size_t i = 0; i < size; i += 4 )
 	{
-		const size_t x = DIMENSIONS[i] + IMAGE_WIDTH + 10,
+		const size_t x = DIMENSIONS[i] + IMAGE_WIDTH + 11,
 			         y = DIMENSIONS[i+1],
 			     width = DIMENSIONS[i+2],
 			    height = DIMENSIONS[i+3];
 
 		// Draw Top Border
 		glBegin( GL_LINES );
-		glVertex2d( x, y );
-		glVertex2d( x + width, y );
+		glVertex2d( x - 1, y + height );
+		glVertex2d( x + width, y + height );
 		glEnd();
 
 		// Draw Bottom Border
 		glBegin( GL_LINES );
-		glVertex2d( x, y + height );
-		glVertex2d( x + width, y + height );
+		glVertex2d( x - 1, y );
+		glVertex2d( x + width, y );
 		glEnd();
 
 		// Draw Left Border
@@ -401,33 +437,61 @@ x and y variables are not used.
 ******************************************************************************/
 void onkeypress( const unsigned char key, const int x, const int y )
 {
-	// If the spacebar is pressed.
-	if ( key == ' ' )
+	switch ( key )
 	{
-		// Toggle quadtree quad border line visibility.
-		DRAW_LINES = !DRAW_LINES;
+		case ' ': // Spacebar
+			if ( DRAW_LINES )
+			{ // Redraw the compressed image over the lines.
+				glRasterPos2i( IMAGE_WIDTH + 10, 0 );
+				glDrawPixels( IMAGE_WIDTH, IMAGE_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, COMPRESSED_IMAGE );
+			}
+			else drawLines(); // Draw the lines over the compressed image.
 
-		// Redraw screen.
-		display();
-	}
+			glFinish(); // Finish Drawing
 
-	else if ( key == '+' || key == '-' )
-	{
-		QUALITY /= 20;
-		QUALITY *= 20;
+			DRAW_LINES = !DRAW_LINES; // Toggle quadtree quad border line visibility.
+			break;
 
-		if ( key == '+' ) QUALITY += 5;
-		else if ( key == '-' ) QUALITY -= 5;
+		case '+':
+		case '-':
+			// Make QUALITY a multiple of 5.
+			QUALITY = 5 * size_t( QUALITY / 5 );
 
-		if ( QUALITY < 0 ) QUALITY = 0;
-		if ( QUALITY > 100 ) QUALITY = 100;
+			// Add or subtract 5 from QUALITY.
+			if ( key == '+' ) QUALITY += 5;
+			else if ( key == '-' ) QUALITY -= 5;
 
-		loadImage( nullptr );
+			// Ensure QUALITY is still within limits.
+			if ( QUALITY < 0.1 ) QUALITY = 0.1;
+			if ( QUALITY > 100 ) QUALITY = 100;
 
-		display();
+			// Recalculate the image.
+			loadImage( nullptr );
+
+			// Redraw the compressed image, and lines if they are on.
+			glRasterPos2i( IMAGE_WIDTH + 10, 0 );
+			glDrawPixels( IMAGE_WIDTH, IMAGE_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, COMPRESSED_IMAGE );
+			if ( DRAW_LINES ) drawLines();
+			glFinish();
+
+			break;
+
+		case 'e':
+		case 'E':
+		case 'q':
+		case 'Q':
+		case 27: // Escape Key
+			glutLeaveMainLoop();
+			break;
 	}
 }
 
+/**************************************************************************//**
+@author John Colton
+
+@par Description:
+Function to test the quadtree class.
+******************************************************************************/
 void test()
 {
 	quadtree<int> test( 500, 500 );
@@ -499,6 +563,7 @@ int main( int argc, char * argv[] )
 	glutDisplayFunc( display );
 	glutKeyboardFunc( onkeypress );
 
+	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION );
 	glutMainLoop();
 
 	delete[] COMPRESSED_IMAGE;
